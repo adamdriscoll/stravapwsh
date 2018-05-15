@@ -7,6 +7,10 @@ function Get-StravaActivity {
         [int]$Page = 1,
         [Parameter(ParameterSetName = 'list')]
         [int]$PerPage = 20,
+        [Parameter(ParameterSetName = 'list')]
+        [DateTime]$Before,
+        [Parameter(ParameterSetName = 'list')]
+        [DateTime]$After,
         [Parameter(ParameterSetName = 'id')]
         [long]$Id,
         [Parameter(ParameterSetName = 'id')]
@@ -15,7 +19,19 @@ function Get-StravaActivity {
 
     Process {
         if ($PSCmdlet.ParameterSetName -eq 'list') {
-            Invoke-RestMethod -Uri "https://www.strava.com/api/v3/athlete/activities?page=$Page&per_page=$PerPage" -Headers @{
+            $Uri = "https://www.strava.com/api/v3/athlete/activities?page=$Page&per_page=$PerPage"
+
+            if ($Before) {
+                $BeforeEpoch = ($Before - [DateTime]"1/1/1970").TotalSeconds
+                $Uri += "&before=$BeforeEpoch"
+            }
+
+            if ($After) {
+                $AfterEpoch = ($After - [DateTime]"1/1/1970").TotalSeconds
+                $Uri += "&after=$AfterEpoch"
+            }
+
+            Invoke-RestMethod -Uri $Uri -Headers @{
                 "Authorization" = "Bearer $AccessToken"
             }
         } else {
